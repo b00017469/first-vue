@@ -9,7 +9,12 @@
            class="input"
            type="text"
            placeholder="Описане">
-    <button @click="createPost" class="btn">Создать</button>
+    <MyButton @click="createPost"
+              style="align-self: flex-end;
+              margin-top: 15px"
+    >
+      Создать
+    </MyButton>
   </form>
 </template>
 
@@ -50,12 +55,5 @@ form {
   margin-top: 15px;
 }
 
-.btn {
-  align-self: flex-end;
-  margin-top: 15px;
-  padding: 10px 15px;
-  background: none;
-  color: teal;
-  border: 1px solid teal;
-}
+
 </style>
