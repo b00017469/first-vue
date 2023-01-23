@@ -17,14 +17,22 @@ export default {
           title: 'JavaScript 2',
           body: 'JavaScript универсальный язык програмирования'
         },
-        {id: 3, title: 'Java', body: 'Its cool!!'}
+        {
+          id: 3,
+          title: 'Java',
+          body: 'Its cool!!'
+        }
       ],
     }
   },
   methods: {
     createPost(post) {
+      console.log(post)
       this.posts.push(post);
     },
+    removePost(post) {
+      this.posts = this.posts.filter(p => p.id !== post.id)
+    }
   }
 }
 </script>
@@ -32,7 +40,7 @@ export default {
 <template>
   <div class="app">
     <PostForm @create="createPost"/>
-    <PostList :posts="posts"/>
+    <PostList :posts="posts" @remove="removePost"/>
   </div>
 </template>
 
