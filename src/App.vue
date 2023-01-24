@@ -1,30 +1,47 @@
 <template>
   <div class="app">
     <h1>Страница с постами</h1>
-    <my-button
-        @click="showDialog"
-        style="margin: 15px 0">
-      Создать пост
-    </my-button>
+    <div class="app__btns">
+      <my-button
+          @click="showDialog">
+        Создать пост
+      </my-button>
+      <my-select
+     v-model="selectedSort"
+     :options="sortOptions"
+      />
+    </div>
+
     <my-dialog v-model:show="dialogVisible">
       <PostForm @create="createPost"/>
     </my-dialog>
-    <PostList :posts="posts" @remove="removePost"/>
+    <PostList
+        :posts="posts"
+        @remove="removePost"
+        v-if="!isPostsLoading"/>
+    <div v-else>Loading...</div>
   </div>
 </template>
 
-<script xmlns="http://www.w3.org/1999/html">
+<script>
 import PostList from "./components/PostList.vue";
 import PostForm from "./components/PostForm.vue";
 import MyDialog from "./common/UI/MyDialog.vue";
 import axios from "axios";
+import MySelect from "./common/UI/MySelect.vue";
 
 export default {
-  components: {MyDialog, PostForm, PostList},
+  components: {MySelect, MyDialog, PostForm, PostList},
   data() {
     return {
       posts: [],
       dialogVisible: false,
+      isPostsLoading: false,
+      selectedSort: '',
+      sortOptions: [
+        {value: 'title', name: 'По названию'},
+        {value: 'body', name: 'По содержимому'}
+      ]
     }
   },
   methods: {
@@ -40,15 +57,25 @@ export default {
     },
     async fetchPosts() {
       try {
-        const response = await axios.get('https://jsonplaceholder.typicode.com/posts?_limit=10')
-        this.posts = response.data;
+        this.isPostsLoading = true;
+          const response = await axios.get('https://jsonplaceholder.typicode.com/posts?_limit=10')
+          this.posts = response.data;
       } catch (e) {
         console.warn(e);
+      } finally {
+        this.isPostsLoading = false;
       }
     }
   },
   mounted() {
     this.fetchPosts();
+  },
+  watch:{
+    selectedSort(newValue){
+      this.posts.sort((post1, post2)=>{
+        return post1[newValue]?.localeCompare(post2[newValue])
+      })
+    }
   }
 }
 </script>
@@ -62,5 +89,10 @@ export default {
 
 .app {
   padding: 20px;
+}
+.app__btns{
+  display: flex;
+  justify-content: space-between;
+  margin: 15px 0;
 }
 </style>
