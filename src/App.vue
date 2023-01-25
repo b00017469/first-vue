@@ -26,6 +26,9 @@
         @remove="removePost"
         v-if="!isPostsLoading"/>
     <div v-else>Loading...</div>
+    <Pagination :total-pages="totalPages"
+                :current-page="page"
+                @changePage="changePageNumber"/>
   </div>
 </template>
 
@@ -36,9 +39,10 @@ import MyDialog from "./common/UI/MyDialog.vue";
 import axios from "axios";
 import MySelect from "./common/UI/MySelect.vue";
 import MyInput from "./common/UI/MyInput.vue";
+import Pagination from "./components/Pagination.vue";
 
 export default {
-  components: {MyInput, MySelect, MyDialog, PostForm, PostList},
+  components: {Pagination, MyInput, MySelect, MyDialog, PostForm, PostList},
   data() {
     return {
       posts: [],
@@ -46,6 +50,9 @@ export default {
       isPostsLoading: false,
       selectedSort: '',
       searchQuery: '',
+      page: 1,
+      limit: 10,
+      totalPages: 0,
       sortOptions: [
         {value: 'title', name: 'По названию'},
         {value: 'body', name: 'По содержимому'}
@@ -58,15 +65,24 @@ export default {
       this.dialogVisible = false;
     },
     removePost(post) {
-      this.posts = this.posts.filter(p => p.id !== post.id)
+      this.posts = this.posts.filter(p => p.id !== post.id);
     },
     showDialog() {
       this.dialogVisible = true;
     },
+    changePageNumber(pageNumber) {
+      this.page = pageNumber;
+    },
     async fetchPosts() {
       try {
         this.isPostsLoading = true;
-        const response = await axios.get('https://jsonplaceholder.typicode.com/posts?_limit=10')
+        const response = await axios.get('https://jsonplaceholder.typicode.com/posts', {
+          params: {
+            _page: this.page,
+            _limit: this.limit,
+          }
+        });
+        this.totalPages = Math.ceil(response.headers['x-total-count'] / this.limit);
         this.posts = response.data;
       } catch (e) {
         console.warn(e);
@@ -87,7 +103,11 @@ export default {
       return this.sortedPosts.filter(post => post.title.toLowerCase().includes(this.searchQuery.toLowerCase()))
     }
   },
-  watch: {}
+  watch: {
+    page(){
+      this.fetchPosts();
+    }
+  }
 }
 </script>
 
