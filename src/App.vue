@@ -1,14 +1,20 @@
 <template>
   <div class="app">
     <h1>Страница с постами</h1>
+
+    <my-input
+        v-model="searchQuery"
+        placeholder="Поиск..."
+    />
+
     <div class="app__btns">
       <my-button
           @click="showDialog">
         Создать пост
       </my-button>
       <my-select
-     v-model="selectedSort"
-     :options="sortOptions"
+          v-model="selectedSort"
+          :options="sortOptions"
       />
     </div>
 
@@ -16,7 +22,7 @@
       <PostForm @create="createPost"/>
     </my-dialog>
     <PostList
-        :posts="posts"
+        :posts="sortedAndSearchPosts"
         @remove="removePost"
         v-if="!isPostsLoading"/>
     <div v-else>Loading...</div>
@@ -29,15 +35,17 @@ import PostForm from "./components/PostForm.vue";
 import MyDialog from "./common/UI/MyDialog.vue";
 import axios from "axios";
 import MySelect from "./common/UI/MySelect.vue";
+import MyInput from "./common/UI/MyInput.vue";
 
 export default {
-  components: {MySelect, MyDialog, PostForm, PostList},
+  components: {MyInput, MySelect, MyDialog, PostForm, PostList},
   data() {
     return {
       posts: [],
       dialogVisible: false,
       isPostsLoading: false,
       selectedSort: '',
+      searchQuery: '',
       sortOptions: [
         {value: 'title', name: 'По названию'},
         {value: 'body', name: 'По содержимому'}
@@ -58,8 +66,8 @@ export default {
     async fetchPosts() {
       try {
         this.isPostsLoading = true;
-          const response = await axios.get('https://jsonplaceholder.typicode.com/posts?_limit=10')
-          this.posts = response.data;
+        const response = await axios.get('https://jsonplaceholder.typicode.com/posts?_limit=10')
+        this.posts = response.data;
       } catch (e) {
         console.warn(e);
       } finally {
@@ -70,13 +78,16 @@ export default {
   mounted() {
     this.fetchPosts();
   },
-  watch:{
-    selectedSort(newValue){
-      this.posts.sort((post1, post2)=>{
-        return post1[newValue]?.localeCompare(post2[newValue])
-      })
+  computed: {
+    sortedPosts() {
+      return [...this.posts]
+          .sort((post1, post2) => post1[this.selectedSort]?.localeCompare(post2[this.selectedSort]))
+    },
+    sortedAndSearchPosts() {
+      return this.sortedPosts.filter(post => post.title.toLowerCase().includes(this.searchQuery.toLowerCase()))
     }
-  }
+  },
+  watch: {}
 }
 </script>
 
@@ -90,7 +101,8 @@ export default {
 .app {
   padding: 20px;
 }
-.app__btns{
+
+.app__btns {
   display: flex;
   justify-content: space-between;
   margin: 15px 0;
